@@ -100,6 +100,6 @@ public class LiveStreamServer {
     }
 
     public static void main(String args[]) {
-        new LiveStreamServer(5000);
+        new LiveStreamServer(Integer.parseInt(args[0]));
     }
 }

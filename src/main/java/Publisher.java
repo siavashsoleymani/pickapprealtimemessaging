@@ -61,7 +61,7 @@ public class Publisher {
     }
 
     public static void main(String args[]) throws IOException {
-        new Publisher("127.0.0.1", 5000);
+        new Publisher(args[0], Integer.parseInt(args[1]));
     }
 
     private static void connect(String address, int port) {
