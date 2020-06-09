@@ -28,6 +28,7 @@ public class Publisher {
         try {
             OutputStream outputStream = socket.getOutputStream();
             String message = recipientId + "," + action + "," + System.currentTimeMillis() + "\n";
+            System.out.println(message);
             outputStream.write(message.getBytes());
             outputStream.flush();
         } catch (IOException e) {
@@ -53,6 +54,7 @@ public class Publisher {
                 } catch (Exception e) {
                     e.printStackTrace();
                     connect(address, port);
+                    clientIntroduction();
                 }
             }
         });

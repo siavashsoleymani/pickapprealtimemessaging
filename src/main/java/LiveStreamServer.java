@@ -36,9 +36,9 @@ public class LiveStreamServer {
                 long id = Long.parseLong(in.readLine());
                 System.out.println("Client accepted");
                 if (id > 3000)
-                    publisherSockets.putIfAbsent(id, socket);
+                    publisherSockets.put(id, socket);
                 else
-                    subscriberSockets.putIfAbsent(id, socket);
+                    subscriberSockets.put(id, socket);
                 CompletableFuture.runAsync(getRunnable(socket, id), executorService);
             }
         });
@@ -49,6 +49,7 @@ public class LiveStreamServer {
             return () -> {
                 while (true) {
                     try {
+                        Thread.sleep(1);
                         DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
                         if (dataInputStream.available() > 0) {
                             Long recepientId;
@@ -77,7 +78,7 @@ public class LiveStreamServer {
                             outputStream.flush();
                         }
 
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
