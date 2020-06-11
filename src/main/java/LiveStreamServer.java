@@ -8,9 +8,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class LiveStreamServer {
-    private static Map<Long, Socket> publisherSockets = new ConcurrentHashMap<>();
-    private static Map<Long, Socket> subscriberSockets = new ConcurrentHashMap<>();
-    private static ExecutorService executorService = Executors.newCachedThreadPool();
+    private static final Map<Long, Socket> publisherSockets = new ConcurrentHashMap<>();
+    private static final Map<Long, Socket> subscriberSockets = new ConcurrentHashMap<>();
+    private static final ExecutorService executorService = Executors.newCachedThreadPool();
     private static ServerSocket server = null;
     private static BufferedReader in = null;
 
