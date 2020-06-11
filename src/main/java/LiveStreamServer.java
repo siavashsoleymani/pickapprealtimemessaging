@@ -1,7 +1,4 @@
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
@@ -11,11 +8,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class LiveStreamServer {
-    private Map<Long, Socket> publisherSockets = new ConcurrentHashMap<>();
-    private Map<Long, Socket> subscriberSockets = new ConcurrentHashMap<>();
+    private static Map<Long, Socket> publisherSockets = new ConcurrentHashMap<>();
+    private static Map<Long, Socket> subscriberSockets = new ConcurrentHashMap<>();
     private static ExecutorService executorService = Executors.newCachedThreadPool();
-    private ServerSocket server = null;
-    private DataInputStream in = null;
+    private static ServerSocket server = null;
+    private static BufferedReader in = null;
 
     public LiveStreamServer(int port) {
         try {
@@ -28,11 +25,12 @@ public class LiveStreamServer {
         }
     }
 
-    private void startAcceptingClients() throws IOException {
+    private void startAcceptingClients() {
         executorService.submit(() -> {
             while (true) {
                 Socket socket = server.accept();
-                in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+                InputStreamReader inputStreamReader = new InputStreamReader(socket.getInputStream());
+                in = new BufferedReader(inputStreamReader);
                 long id = Long.parseLong(in.readLine());
                 System.out.println("Client accepted");
                 if (id > 3000)
@@ -45,45 +43,14 @@ public class LiveStreamServer {
     }
 
     private Runnable getRunnable(Socket socket, long id) {
-        if (id > 3000) {
-            return () -> {
-                while (true) {
-                    try {
-                        Thread.sleep(1);
-                        DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-                        if (dataInputStream.available() > 0) {
-                            Long recepientId;
-                            Long timestamp;
-                            String action;
-                            try {
-                                String data = dataInputStream.readLine();
-                                if (data.startsWith("h"))
-                                    continue;
-                                String[] split = data.split(",");
-                                recepientId = Long.valueOf(split[0]);
-                                action = split[1];
-                                timestamp = Long.valueOf(split[2]);
-                            } catch (Exception e) {
-                                System.out.println("Unknown message received");
-                                continue;
-                            }
-                            Socket subscriberSocket = subscriberSockets.get(recepientId);
-                            System.out.println(action + "," + timestamp);
-                            if (subscriberSocket == null) {
-                                System.out.println("Unknown receiver");
-                                continue;
-                            }
-                            OutputStream outputStream = subscriberSocket.getOutputStream();
-                            outputStream.write((action + "," + timestamp).getBytes());
-                            outputStream.flush();
-                        }
+        if (id > 3000)
+            return getPublisherRunnable(socket);
+        else
+            return getSubscriberRunnable(socket);
+    }
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
-        } else return () -> {
+    private Runnable getSubscriberRunnable(Socket socket) {
+        return () -> {
             while (true) {
                 try {
                     OutputStream outputStream = socket.getOutputStream();
@@ -95,6 +62,46 @@ public class LiveStreamServer {
                     subscriberSockets.values().remove(socket);
                     break;
                 }
+            }
+        };
+    }
+
+    private Runnable getPublisherRunnable(Socket socket) {
+        return () -> {
+            try {
+                InputStreamReader inputStreamReader = new InputStreamReader(socket.getInputStream());
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                while (true) {
+                    Thread.sleep(0,500);
+                    if (bufferedReader.ready()) {
+                        Long recepientId;
+                        Long timestamp;
+                        String action;
+                        try {
+                            String message = bufferedReader.readLine();
+                            if (message.startsWith("h"))
+                                continue;
+                            String[] split = message.split(",");
+                            recepientId = Long.valueOf(split[0]);
+                            action = split[1];
+                            timestamp = Long.valueOf(split[2]);
+                        } catch (Exception e) {
+                            System.out.println("Unknown message received");
+                            continue;
+                        }
+                        Socket subscriberSocket = subscriberSockets.get(recepientId);
+                        System.out.println(action + "," + timestamp);
+                        if (subscriberSocket == null) {
+                            System.out.println("Unknown receiver");
+                            continue;
+                        }
+                        OutputStream outputStream = subscriberSocket.getOutputStream();
+                        outputStream.write((action + "," + timestamp).getBytes());
+                        outputStream.flush();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         };
     }

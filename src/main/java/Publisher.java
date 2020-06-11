@@ -1,4 +1,3 @@
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -28,7 +27,6 @@ public class Publisher {
         try {
             OutputStream outputStream = socket.getOutputStream();
             String message = recipientId + "," + action + "," + System.currentTimeMillis() + "\n";
-            System.out.println(message);
             outputStream.write(message.getBytes());
             outputStream.flush();
         } catch (IOException e) {
@@ -37,7 +35,7 @@ public class Publisher {
     }
 
     private void clientIntroduction() throws IOException {
-        DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+        OutputStream outputStream = socket.getOutputStream();
         outputStream.write("3001\n".getBytes());
         outputStream.flush();
     }
