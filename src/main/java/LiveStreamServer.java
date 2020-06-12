@@ -72,32 +72,36 @@ public class LiveStreamServer {
                 InputStreamReader inputStreamReader = new InputStreamReader(socket.getInputStream());
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
                 while (true) {
-                    Thread.sleep(0,500);
-                    if (bufferedReader.ready()) {
-                        Long recepientId;
-                        Long timestamp;
-                        String action;
-                        try {
-                            String message = bufferedReader.readLine();
-                            if (message.startsWith("h"))
+                    try {
+                        Thread.sleep(0, 500);
+                        if (bufferedReader.ready()) {
+                            Long recepientId;
+                            Long timestamp;
+                            String action;
+                            try {
+                                String message = bufferedReader.readLine();
+                                if (message.startsWith("h"))
+                                    continue;
+                                String[] split = message.split(",");
+                                recepientId = Long.valueOf(split[0]);
+                                action = split[1];
+                                timestamp = Long.valueOf(split[2]);
+                            } catch (Exception e) {
+                                System.out.println("Unknown message received");
                                 continue;
-                            String[] split = message.split(",");
-                            recepientId = Long.valueOf(split[0]);
-                            action = split[1];
-                            timestamp = Long.valueOf(split[2]);
-                        } catch (Exception e) {
-                            System.out.println("Unknown message received");
-                            continue;
+                            }
+                            Socket subscriberSocket = subscriberSockets.get(recepientId);
+                            System.out.println(action + "," + timestamp);
+                            if (subscriberSocket == null) {
+                                System.out.println("Unknown receiver");
+                                continue;
+                            }
+                            OutputStream outputStream = subscriberSocket.getOutputStream();
+                            outputStream.write((action + "," + timestamp).getBytes());
+                            outputStream.flush();
                         }
-                        Socket subscriberSocket = subscriberSockets.get(recepientId);
-                        System.out.println(action + "," + timestamp);
-                        if (subscriberSocket == null) {
-                            System.out.println("Unknown receiver");
-                            continue;
-                        }
-                        OutputStream outputStream = subscriberSocket.getOutputStream();
-                        outputStream.write((action + "," + timestamp).getBytes());
-                        outputStream.flush();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             } catch (Exception e) {
