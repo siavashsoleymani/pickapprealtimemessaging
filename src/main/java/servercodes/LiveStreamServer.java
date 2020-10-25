@@ -1,3 +1,5 @@
+package servercodes;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -36,22 +38,22 @@ public class LiveStreamServer {
         in = new BufferedReader(inputStreamReader);
         long id = Long.parseLong(in.readLine());
         System.out.println("Client accepted");
-          if (id > 3000) {
-              publisherSockets.put(id, socket);
-          } else {
-              subscriberSockets.put(id, socket);
-          }
+        if (id > 3000) {
+          publisherSockets.put(id, socket);
+        } else {
+          subscriberSockets.put(id, socket);
+        }
         CompletableFuture.runAsync(getRunnable(socket, id), executorService);
       }
     });
   }
 
   private Runnable getRunnable(Socket socket, long id) {
-      if (id > 3000) {
-          return getPublisherRunnable(socket);
-      } else {
-          return getSubscriberRunnable(socket);
-      }
+    if (id > 3000) {
+      return getPublisherRunnable(socket);
+    } else {
+      return getSubscriberRunnable(socket);
+    }
   }
 
   private Runnable getSubscriberRunnable(Socket socket) {
@@ -85,9 +87,9 @@ public class LiveStreamServer {
               String action;
               try {
                 String message = bufferedReader.readLine();
-                  if (message.startsWith("h")) {
-                      continue;
-                  }
+                if (message.startsWith("h")) {
+                  continue;
+                }
                 String[] split = message.split(",");
                 recepientId = Long.valueOf(split[0]);
                 action = split[1];
@@ -103,7 +105,7 @@ public class LiveStreamServer {
                 continue;
               }
               OutputStream outputStream = subscriberSocket.getOutputStream();
-              outputStream.write((action + "," + timestamp).getBytes());
+              outputStream.write((action + "," + timestamp + "\n").getBytes());
               outputStream.flush();
             }
           } catch (Exception e) {
